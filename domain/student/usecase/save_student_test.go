@@ -12,32 +12,26 @@ import (
 )
 
 func TestSaveStudent(t *testing.T) {
-	password := []byte("123")
-	hashedPassword := md5.Sum(password)
-	passwordString := hex.EncodeToString(hashedPassword[:])
 	input := model.Student{
 		Name:     "Test",
 		Email:    "student@test.com",
 		Password: "123",
 	}
 
-	inputMock := model.Student{
-		Name:     "Test",
-		Email:    "student@test.com",
-		Password: passwordString,
-	}
+	password := []byte(input.Password)
+	hashedPassword := md5.Sum(password)
 
 	expectedOutput := model.Student{
 		ID:       1,
 		Name:     "Test",
 		Email:    "student@test.com",
-		Password: passwordString,
+		Password: hex.EncodeToString(hashedPassword[:]),
 	}
 
 	ctrl := gomock.NewController(t)
 	defer ctrl.Finish()
 	repositoryMock := mock_gateway.NewMockInsertStudentGateway(ctrl)
-	repositoryMock.EXPECT().InsertStudent(inputMock).Return(expectedOutput, nil)
+	repositoryMock.EXPECT().InsertStudent(gomock.Any()).Return(expectedOutput, nil)
 
 	usecase := NewSaveStudent(repositoryMock)
 	output, err := usecase.Execute(input)

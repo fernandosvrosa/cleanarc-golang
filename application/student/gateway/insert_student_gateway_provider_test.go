@@ -1,7 +1,7 @@
 package gateway
 
 import (
-	"github.com/fernandosvrosa/cleanarc-golang/application/student/gateway/fixture"
+	"github.com/fernandosvrosa/cleanarc-golang/config/fixture"
 	"github.com/fernandosvrosa/cleanarc-golang/domain/student/model"
 	"github.com/stretchr/testify/assert"
 	"os"
