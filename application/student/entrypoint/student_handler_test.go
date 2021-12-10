@@ -1,50 +1,42 @@
 package entrypoint
 
 import (
+	"bytes"
+	"encoding/json"
+	"github.com/fernandosvrosa/cleanarc-golang/application/student/gateway"
+	"github.com/fernandosvrosa/cleanarc-golang/config/fixture"
+	"github.com/fernandosvrosa/cleanarc-golang/domain/student/usecase"
 	"github.com/gofiber/fiber/v2"
 	"github.com/stretchr/testify/assert"
+	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
 func TestStudentHandler(t *testing.T) {
-	tests := []struct {
-		description  string // description of the test case
-		route        string // route path to test
-		expectedCode int    // expected HTTP status code
-	}{
-		// First test case
-		{
-			description:  "get HTTP status 200",
-			route:        "/hello",
-			expectedCode: 200,
-		},
-		// Second test case
-		{
-			description:  "get HTTP status 404, when route is not exists",
-			route:        "/not-found",
-			expectedCode: 404,
-		},
-	}
+	migrationDir := os.DirFS("fixture/sql")
+	db := fixture.Up(migrationDir)
+	defer fixture.Down(db, migrationDir)
+
+	provider := gateway.NewInsertStudentGatawayProvider(db)
+	saveStudentUseCase := usecase.NewSaveStudent(provider)
+	studentHandler := NewStudentHandler(saveStudentUseCase)
 
 	app := fiber.New()
+	app.Post("/v1/students", studentHandler.SaveStudent)
 
-	app.Get("/hello", func(c *fiber.Ctx) error {
-		// Return simple string as response
-		return c.SendString("Hello, World!")
-	})
+	body := struct {
+		Name     string `json:"name"`
+		Email    string `json:"email"`
+		Password string `json:"password"`
+	}{"Teste", "teste@student.comm", "1234"}
 
-	// Iterate through test single test cases
-	for _, test := range tests {
-		// Create a new http request with the route from the test case
-		req := httptest.NewRequest("GET", test.route, nil)
+	var b bytes.Buffer
+	json.NewEncoder(&b).Encode(body)
+	req := httptest.NewRequest(http.MethodPost, "/v1/students", &b)
+	req.Header.Set("Content-Type", "application/json")
+	resp, _ := app.Test(req, 600)
 
-		// Perform the request plain with the app,
-		// the second argument is a request latency
-		// (set to -1 for no latency)
-		resp, _ := app.Test(req, 1)
-
-		// Verify, if the status code is as expected
-		assert.Equalf(t, test.expectedCode, resp.StatusCode, test.description)
-	}
+	assert.Equalf(t, 201, resp.StatusCode, "Save student")
 }

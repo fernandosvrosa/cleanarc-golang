@@ -12,8 +12,8 @@ type Student struct {
 	Password string
 }
 
-func NewStudent() *Student {
-	return &Student{}
+func NewStudent(id int, name, email, password string) *Student {
+	return &Student{ID: id, Name: name, Email: email, Password: password}
 }
 
 func (s *Student) IsValid() error {

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/fernandosvrosa/cleanarc-golang/config"
 	"github.com/gofiber/fiber/v2"
+	_ "github.com/mattn/go-sqlite3"
 	"log"
 )
 
